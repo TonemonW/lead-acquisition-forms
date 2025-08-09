@@ -46,7 +46,8 @@ lead-acquisition-forms/
         firestoreService.ts# Firestore write helper
         salesforceService.ts# push data to Salesforce CRM
     package.json           
-  vite.config.ts           # UMD build config (react & react-dom are external)
+  vite.config.widget.ts    # UMD build config 
+  vite.config.iframe.ts    # Iframe dev/build config for local embedding demo
 ```
 
 Key files:
@@ -72,19 +73,19 @@ Linting:
 npm run lint
 ```
 
-## Build the Widget
-Produces `dist/lead-form-widget.js` (UMD format).
+## Build the Widget (UMD)
+Produces `public/widget/lead-form-widget.js` (+ extracted CSS `public/widget/lead-acquisition-forms.css`).
 ```bash
-npm run build
+npm run build:widget
 ```
-The build is configured in `vite.config.ts`:
-- Output file: `dist/lead-form-widget.js`
+The build is configured in `vite.config.widget.ts`:
+- Output: `public/widget/lead-form-widget.js`
 - Format: UMD
-- Externals: `react`, `react-dom` (expected as globals `React`, `ReactDOM` in the host page)
+- CSS is emitted as a separate file (link it in the host page)
 
-## Embed in a Host Page
-1. Ensure `React` and `ReactDOM` are available as globals in the host page (because they are marked as externals in the UMD build).
-2. Include the widget bundle and mount it into a container.
+## Embed in a Host Page (UMD)
+1. Ensure `React` and `ReactDOM` are available as globals in the host page (UMD externals)
+2. Include the emitted CSS and JS, then call `LeadFormWidget.mount()`
 
 Example host HTML:
 ```html
@@ -94,10 +95,6 @@ Example host HTML:
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Lead Form Widget Host</title>
-    <!-- Provide React & ReactDOM as globals in your environment -->
-    <!-- <script src="/path/to/react.global.js"></script> -->
-    <!-- <script src="/path/to/react-dom.global.js"></script> -->
-
     <style>
       /* Optional container sizing */
       #lead-form-root { max-width: 420px; margin: 24px auto; }
@@ -105,9 +102,12 @@ Example host HTML:
   </head>
   <body>
     <div id="lead-form-root"></div>
+    
+    <script>window.process = { env: { NODE_ENV: 'production' } };</script>
 
-    <!-- The bundled widget built by `npm run build` -->
-    <script src="/dist/lead-form-widget.js"></script>
+    <!-- Widget CSS & JS built by `npm run build:widget` -->
+    <link rel="stylesheet" href="/widget/lead-acquisition-forms.css" />
+    <script src="/widget/lead-form-widget.js"></script>
     <script>
       // Mount the widget into a DOM selector
       window.LeadFormWidget.mount('#lead-form-root');
@@ -115,6 +115,25 @@ Example host HTML:
   </body>
   </html>
 ```
+
+## Iframe Demo (local development)
+We provide an iframe page to demo/embed the UMD bundle locally.
+
+Dev:
+```bash
+npm run dev:iframe
+```
+- Serves `src/iframe/index.html` with `publicDir` mapped to the project `public/`
+- Ensure you have built the widget first:
+  ```bash
+  npm run build:widget
+  ```
+
+Build (optional):
+```bash
+npm run build:iframe
+```
+By default, the iframe build writes to `public/iframe/`. You can disable copying `public/` into that folder by setting `copyPublicDir: false` if desired.
 
 Global API exposed by the bundle:
 ```ts
