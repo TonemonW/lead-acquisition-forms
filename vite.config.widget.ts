@@ -1,11 +1,17 @@
-// vite.config.ts
+// vite.config.widget.ts
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  publicDir: false,
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
   build: {
-    outDir: 'dist',
+    outDir: 'public/widget',
+    emptyOutDir: true,
+
     lib: {
       entry: './src/main-widget.tsx',
       name: 'LeadFormWidget',
@@ -13,12 +19,9 @@ export default defineConfig({
       formats: ['umd'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      // external: ['react', 'react-dom'],
       output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-        },
+        globals: { react: 'React', 'react-dom': 'ReactDOM' },
       },
     },
   },

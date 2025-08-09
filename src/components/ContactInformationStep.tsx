@@ -163,9 +163,9 @@ export const ContactInformationStep = ({ onBack, onSubmit, isSubmitted = false }
                         type="submit"
                         disabled={!isValid || disabled}
                         className={`flex-1 ${isSubmitted
-                            ? 'bg-green-500 text-white cursor-not-allowed'
+                            ? 'bg-none bg-green-500 text-white cursor-not-allowed'
                             : isSubmitting
-                                ? 'bg-orange-400 text-white cursor-wait'
+                                ? ' text-white cursor-wait'
                                 : ''
                             }`}
                         aria-busy={isSubmitting}

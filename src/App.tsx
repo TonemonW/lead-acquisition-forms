@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loanFormSchema, type LoanFormData } from './types/loanForm';
@@ -11,6 +11,29 @@ function App() {
   const [nextStep, setNextStep] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // timers for transition control
+  const slideOutTimerRef = useRef<number>(null);
+  const settleTimerRef = useRef<number>(null);
+  // timer for submit reset
+  const submitResetTimerRef = useRef<number>(null);
+
+  useEffect(() => {
+    return () => {
+      if (slideOutTimerRef.current) {
+        clearTimeout(slideOutTimerRef.current);
+        slideOutTimerRef.current = null;
+      }
+      if (settleTimerRef.current) {
+        clearTimeout(settleTimerRef.current);
+        settleTimerRef.current = null;
+      }
+      if (submitResetTimerRef.current) {
+        clearTimeout(submitResetTimerRef.current);
+        submitResetTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const methods = useForm<LoanFormData>({
     defaultValues: { loanAmount: '', loanType: undefined, fullName: '', email: '', phoneNumber: '' },
     mode: 'onChange',
@@ -19,12 +42,25 @@ function App() {
 
   const animateToStep = (targetStep: number) => {
     if (isTransitioning) return;
+
+    // clear any previous timers just in case
+    if (slideOutTimerRef.current) {
+      clearTimeout(slideOutTimerRef.current);
+      slideOutTimerRef.current = null;
+    }
+    if (settleTimerRef.current) {
+      clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+    }
+
     setIsTransitioning(true);
     setNextStep(targetStep);
-    setTimeout(() => {
+    slideOutTimerRef.current = window.setTimeout(() => {
       setStep(targetStep);
       setNextStep(null);
-      setTimeout(() => setIsTransitioning(false), 50);
+      settleTimerRef.current = window.setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
     }, 200);
   };
 
@@ -33,11 +69,19 @@ function App() {
 
   const handleSubmit = (_data: LoanFormData) => {
     setIsSubmitted(true);
-    setTimeout(() => {
+
+    // clear previous submit reset timer if any
+    if (submitResetTimerRef.current) {
+      clearTimeout(submitResetTimerRef.current);
+      submitResetTimerRef.current = null;
+    }
+
+    submitResetTimerRef.current = window.setTimeout(() => {
       methods.reset({ loanAmount: '', loanType: undefined, fullName: '', email: '', phoneNumber: '' });
       methods.clearErrors();
       setStep(1);
       setIsSubmitted(false);
+      submitResetTimerRef.current = null;
     }, 4000);
   };
 
