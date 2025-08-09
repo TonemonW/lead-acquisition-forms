@@ -22,10 +22,10 @@ A lightweight, two-step lead form built with React, Vite, React Hook Form, and Z
 lead-acquisition-forms/
   src/
     App.tsx
-    main.tsx
-    main-widget.tsx        # Library entry → exposes window.LeadFormWidget.mount
+    main.tsx               # Local test entry
+    main-widget.tsx        # Library entry 
     components/
-      LoanDetailsStep.tsx
+      LoanDetailsStep.tsx    
       ContactInformationStep.tsx
       ui/
         button.tsx
@@ -37,6 +37,15 @@ lead-acquisition-forms/
       api.ts               # submitLead(payload)
     types/
       loanForm.ts          # Zod schema & types
+  functions/               # Firebase Cloud Functions (backend)
+    src/
+      index.ts             # onRequest HTTP function (submitLead)
+      handlers/
+        leadHandler.ts     # request validation 
+      services/
+        firestoreService.ts# Firestore write helper
+        salesforceService.ts# push data to Salesforce CRM
+    package.json           
   vite.config.ts           # UMD build config (react & react-dom are external)
 ```
 
@@ -135,6 +144,52 @@ Payload shape (`SubmitLeadPayload`):
 }
 ```
 
+## Cloud Functions (Backend)
+
+Overview:
+- Runtime: Node 20, Firebase Functions v2 (HTTPS onRequest)
+- Single HTTP endpoint: `submitLead` (region: `australia-southeast1`), CORS `*`
+- Basic checks: method must be POST; required fields presence validation
+- Persists to Firestore collection `leads` with `createdAt` server timestamp
+
+Key files:
+- `functions/src/index.ts`: exports the HTTPS function with CORS enabled
+- `functions/src/handlers/leadHandler.ts`: method/field validation, error handling, calls Firestore
+- `functions/src/services/firestoreService.ts`: initializes Admin SDK and writes lead document
+
+Local development (Functions):
+```bash
+cd functions
+npm install
+npm run serve     # builds then starts the Functions emulator (functions only)
+# Copy the printed local URL of submitLead and set it for the widget build/run
+# Example: VITE_FUNCTIONS_BASE_URL=http://127.0.0.1:5001/<project-id>/australia-southeast1/submitLead
+```
+
+Deploy (requires Firebase project configured):
+```bash
+cd functions
+npm run deploy
+```
+
+Logs:
+```bash
+cd functions
+npm run logs
+```
+
+Request/Response contract (server):
+- Request: `POST` JSON body `{ fullName, email, phoneNumber, loanType, loanAmount }`
+- Responses:
+  - 200 `{ message: 'Lead submitted successfully' }`
+  - 400 `{ error: 'Missing required fields', received: { ...booleans } }`
+  - 405 `{ error: 'Method Not Allowed' }`
+  - 500 `{ error: 'firestore_write_failed', details }` or `{ error: 'Internal server error', details? }`
+
+Notes:
+- Frontend timeout is 15s (`src/services/api.ts`). Surface server error messages if needed.
+- Consider enhancing server-side validation (email/phone format), rate limiting, and spam protection as follow-ups.
+
 ## Validation Rules (Zod)
 Defined in `src/types/loanForm.ts`:
 - `loanAmount`: string of digits, > 0
@@ -156,7 +211,7 @@ Defined in `src/types/loanForm.ts`:
 - Blank screen or console error about `React`/`ReactDOM` not found:
   - Ensure the host page provides global `React` and `ReactDOM` before loading `lead-form-widget.js`
 - Network errors on submit:
-  - Verify `VITE_FUNCTIONS_BASE_URL`, or ensure the host path `/submitLead` is reachable
+  - Verify `VITE_FUNCTIONS_BASE_URL`
 - Validation blocking step transitions:
   - Check field values against the rules in `src/types/loanForm.ts`
 
