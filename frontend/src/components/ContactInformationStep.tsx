@@ -1,6 +1,6 @@
 //
 import { useFormContext } from 'react-hook-form';
-import type { LoanFormData } from '../types/loanForm';
+import type { LoanFormData } from '@lead/shared/types/loanForm';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';

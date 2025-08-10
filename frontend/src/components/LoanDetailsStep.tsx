@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select } from './ui/select';
 import { IconChevronDown, IconCurrency, IconError } from './ui/icon';
+import { useLoanDetailsForm } from '../hooks/useLoanDetailsForm';
 
 const LOAN_TYPES = loanTypeEnum.options;
 
@@ -13,25 +14,8 @@ interface ILoanDetailsStepProps {
 }
 
 export const LoanDetailsStep = ({ onNext }: ILoanDetailsStepProps) => {
-    const {
-        register,
-        formState: { errors },
-        setValue,
-        trigger,
-        watch,
-    } = useFormContext<LoanFormData>();
-
-    const onSubmit = async () => {
-        const isStepValid = await trigger(['loanAmount', 'loanType']);
-        if (isStepValid) onNext();
-    };
-
-    const handleAmountInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const raw = e.target.value.replace(/\D+/g, '').replace(/^0+(?!$)/, '');
-        if (raw !== watch('loanAmount')) {
-            setValue('loanAmount', raw, { shouldValidate: true, shouldDirty: true });
-        }
-    };
+    const { register } = useFormContext<LoanFormData>();
+    const { errors, handleSubmit, handleAmountInput } = useLoanDetailsForm(onNext);
 
     return (
         <div className="animate-in fade-in slide-in-from-right-4 duration-500">
@@ -46,7 +30,7 @@ export const LoanDetailsStep = ({ onNext }: ILoanDetailsStepProps) => {
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
-                    onSubmit();
+                    handleSubmit();
                 }}
                 className="space-y-6"
                 noValidate

@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import type React from 'react';
 import { useFormContext, type FieldErrors } from 'react-hook-form';
-import type { LoanFormData } from '../types/loanForm';
+import type { LoanFormData } from '@lead/shared/types/loanForm';
 import { submitLead as submitLeadApi } from '../services/api';
+import { useFocusFirstInvalid } from './useFocusFirstInvalid';
 
 const PHONE_NUMBER_MAX_LENGTH = 9;
 
-export function useContactForm(onSubmit: (data: LoanFormData) => void, isSubmitted: boolean) {
-    const { handleSubmit, setFocus, setValue, watch } = useFormContext<LoanFormData>();
+export function useContactForm(onSubmit: (data: LoanFormData) => void, _isSubmitted: boolean) {
+    const { handleSubmit, setValue, watch } = useFormContext<LoanFormData>();
+    const focusFirstInvalid = useFocusFirstInvalid<LoanFormData>();
 
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,13 +40,7 @@ export function useContactForm(onSubmit: (data: LoanFormData) => void, isSubmitt
     };
 
     const handleInvalid = (formErrors: FieldErrors<LoanFormData>) => {
-        const order: Array<keyof LoanFormData> = ['fullName', 'email', 'phoneNumber'];
-        for (const field of order) {
-            if (formErrors[field]) {
-                setFocus(field);
-                break;
-            }
-        }
+        focusFirstInvalid(formErrors, ['fullName', 'email', 'phoneNumber']);
     };
 
     const normalizeAndSetPhone = (input: string) => {

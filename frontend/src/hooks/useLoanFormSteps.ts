@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { LoanFormData } from '../types/loanForm';
+import type { LoanFormData } from '@lead/shared/types/loanForm';
 
 const TRANSITION_SLIDE_OUT_MS = 200;
 const TRANSITION_SETTLE_MS = 50;
