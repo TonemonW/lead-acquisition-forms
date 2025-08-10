@@ -54,10 +54,7 @@ lead-acquisition-forms/
   Dockerfile, .dockerignore   # optional containerization (frontend)
 ```
 
-## Overview
-- Frontend widget: UMD bundle to embed in any host page, plus iframe for low code CMS
-- Backend: Firebase Functions v2 HTTPS endpoint `submitLead` (region: australia-southeast1)
-- Shared: Zod schema validates payload on both client and server
+
 
 ## Frontend (Widget + Iframe)
 - Features
