@@ -23,6 +23,7 @@
   },
   "include": [
     "vite.config.widget.ts",
-    "vite.config.iframe.ts"
+    "vite.config.iframe.ts",
+    "vite.config.ts"
   ]
 }

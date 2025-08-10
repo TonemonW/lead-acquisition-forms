@@ -1,0 +1,35 @@
+# Node modules and caches
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+
+# Git
+.git
+.gitignore
+
+# Editor/OS
+.DS_Store
+*.swp
+*.swo
+*.idea
+.vscode
+
+# Build outputs
+frontend/node_modules
+frontend/dist
+frontend/public/widget
+backend/node_modules
+backend/lib
+backend/firebase-debug*.log
+shared/lib
+
+# Tests and coverage
+coverage
+**/*.test.*
+**/*.spec.*
+
+# Env files
+.env
+**/.env*
