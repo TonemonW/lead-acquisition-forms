@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Iframe Demo</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        iframe {
+            width: 100%;
+            height: 590px;
+            border: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe id="probeIframe" src="https://lead-acquisition-forms.vercel.app/iframe/index.html"></iframe>
+    <script>
+        const iframe = document.getElementById('probeIframe');
+        iframe.addEventListener('load', () => console.log('iframe loaded'));
+        iframe.addEventListener('error', () => console.error('iframe failed to load'));
+    </script>
+</body>
+
+</html>

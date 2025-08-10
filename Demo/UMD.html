@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UMD Demo</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #lead-form-root {
+            min-height: 590px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="lead-form-root"></div>
+
+    <script>window.process = { env: { NODE_ENV: 'production' } };</script>
+
+    <link rel="stylesheet" href="https://lead-acquisition-forms.vercel.app/widget/lead-acquisition-forms.css" />
+    <script src="https://lead-acquisition-forms.vercel.app/widget/lead-form-widget.js" crossorigin="anonymous"></script>
+
+    <script>
+        if (window.LeadFormWidget && typeof window.LeadFormWidget.mount === 'function') {
+            window.LeadFormWidget.mount('#lead-form-root');
+            console.log('UMD mounted');
+        } else {
+            console.error('UMD not available: window.LeadFormWidget is undefined');
+        }
+    </script>
+</body>
+
+</html>
