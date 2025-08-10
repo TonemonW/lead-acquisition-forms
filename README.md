@@ -1,244 +1,145 @@
-# Lead Acquisition Forms (Widget)
+## Lead Acquisition Forms (Frontend + Backend + Database)
 
-A lightweight, two-step lead form built with React, Vite, React Hook Form, and Zod. It can be embedded as a widget into any host page and posts leads to a configurable backend endpoint.
+A lightweight, two-step lead form widget/iframe (React + Vite) with a Firebase Functions backend and Firestore Database.
 
-## Features
-- Two steps: Loan details → Contact information
-- Validation powered by Zod via `@hookform/resolvers`
-- Accessible form semantics (`aria-*`, required fields, error messaging)
-- Small UI primitives (`Button`, `Input`, `Select`, `Label`) and reusable icons
-- Packaged as a UMD library exposing a global `LeadFormWidget` with a `mount(selector)` API
+### Requirements
+- Node 20 (frontend, backend)
 
-## Tech Stack
-- React 19, React DOM
-- Vite (library mode)
-- React Hook Form 7
-- Zod, `@hookform/resolvers`
-- Tailwind CSS (utility classes)
-- Axios for HTTP (frontend)
+### Installation
+- Install all workspace dependencies at the repo root:
+  ```bash
+  npm i
+  ```
+
+### Root npm scripts (run at repo root)
+- `npm run build:shared`: build shared Zod schema for backend use
+- `npm run build:frontend`: build widget UMD and iframe 
+- `npm run build:backend`: build backend (runs build:shared first)
+- `npm run dev:frontend`: start Vite dev server for the frontend forms
+- `npm run dev:backend`: start Firebase Functions emulator
+- `npm run deploy:backend`: deploy Firebase Functions only
+- `npm run lint`: lint frontend and backend
+- `npm run test -w frontend`: run frontend unit tests (Vitest)
 
 ## Project Structure
 ```
 lead-acquisition-forms/
-  src/
-    App.tsx
-    main.tsx               # Local test entry
-    main-widget.tsx        # Library entry 
-    components/
-      LoanDetailsStep.tsx    
-      ContactInformationStep.tsx
-      ui/
-        button.tsx
-        input.tsx
-        select.tsx
-        label.tsx
-        icon.tsx
-    services/
-      api.ts               # submitLead(payload)
-    types/
-      loanForm.ts          # Zod schema & types
-  functions/               # Firebase Cloud Functions (backend)
+  Demo                        # Demo pages for UMD and iframe
+  frontend/                
     src/
-      index.ts             # onRequest HTTP function (submitLead)
-      handlers/
-        leadHandler.ts     # request validation 
-      services/
-        firestoreService.ts# Firestore write helper
-        salesforceService.ts# push data to Salesforce CRM
-    package.json           
-  vite.config.widget.ts    # UMD build config 
-  vite.config.iframe.ts    # Iframe dev/build config for local embedding demo
+      App.tsx
+      main.tsx                # Local environment entry
+      main-widget.tsx         # UMD entry (window.LeadFormWidget)
+      components/             # Two-step form + basic UI primitives
+        LoanDetailsStep.tsx
+        ContactInformationStep.tsx
+        ui/ (button, input, select, label, icon)
+        ui/button.test        # Button unit test (Vitest)
+      services/api.ts         # submitLead(payload)
+      iframe/index.html       # Iframe page
+    public/
+      widget/                 # UMD output (build)
+      iframe/                 # Iframe output (build)
+    vite.config.*.ts
+  backend/                    # Firebase Functions (Cloud Functions)
+    src/
+      index.ts                # onRequest HTTP function (submitLead)
+      handlers/leadHandler.ts # Validate & persist, Salesforce push
+      services/(firestoreService.ts, salesforceService.ts)
+    types/loanForm.js         # Built schema from shared (runtime JS)
+    firebase.json, .firebaserc
+  shared/                     # Zod schema shared by FE/BE
+    types/loanForm.ts
+  vercel.json                 # deploy frontend/public on Vercel
+  Dockerfile, .dockerignore   # optional containerization (frontend)
 ```
 
-Key files:
-- `src/types/loanForm.ts`: Zod schema (`loanFormSchema`) and `loanTypeEnum`
-- `src/App.tsx`: Form provider + step flow
-- `src/components/LoanDetailsStep.tsx`, `src/components/ContactInformationStep.tsx`: Steps
-- `src/services/api.ts`: `submitLead` implementation
-- `src/main-widget.tsx`: Widget entry (`window.LeadFormWidget.mount`)
+## Overview
+- Frontend widget: UMD bundle to embed in any host page, plus iframe for low code CMS
+- Backend: Firebase Functions v2 HTTPS endpoint `submitLead` (region: australia-southeast1)
+- Shared: Zod schema validates payload on both client and server
 
-## Getting Started (Development)
-1. Install dependencies
-   ```bash
-   npm install
-   ```
-2. Start dev server
-   ```bash
-   npm run dev
-   ```
-3. Open the local preview (served by Vite). For the embedded widget build, see the next section.
+## Frontend (Widget + Iframe)
+- Features
+  - Two-step form: Loan details → Contact information
+  - Full accessibility: labels, `aria-invalid`, `aria-describedby`, live region for step changes, focus management to first invalid field
+  - Validation with Zod via `@hookform/resolvers`
+  - Data normalization: Loan Amount strips non-digits and leading zeros; Phone strips spaces/non-digits, removes `+61`/`61` or leading `0`
+  - Failure handling: shows an inline error and focuses the erroneous input
+  - Success feedback: after a successful backend submit, the button indicates success
 
-Linting:
-```bash
-npm run lint
-```
+- Dev
+  - `npm run dev:frontend`
+- Build widget (UMD) and iframe
+  - `npm run build:frontend` → outputs to `frontend/public/widget/` and `frontend/public/iframe/`
+- API base URL
+  - `VITE_FUNCTIONS_BASE_URL` from deployed Firebase Function
+- Tests
+  - `npm run test -w frontend` (Vitest + Testing Library)
 
-## Build the Widget (UMD)
-Produces `public/widget/lead-form-widget.js` (+ extracted CSS `public/widget/lead-acquisition-forms.css`).
-```bash
-npm run build:widget
-```
-The build is configured in `vite.config.widget.ts`:
-- Output: `public/widget/lead-form-widget.js`
-- Format: UMD
-- CSS is emitted as a separate file (link it in the host page)
-
-## Embed in a Host Page (UMD)
-1. Ensure `React` and `ReactDOM` are available as globals in the host page (UMD externals)
-2. Include the emitted CSS and JS, then call `LeadFormWidget.mount()`
-
-Example host HTML:
-```html
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lead Form Widget Host</title>
-    <style>
-      /* Optional container sizing */
-      #lead-form-root { max-width: 420px; margin: 24px auto; }
-    </style>
-  </head>
-  <body>
+- Examples
+  - Widget (UMD)
+    ```html
     <div id="lead-form-root"></div>
-    
-    <script>window.process = { env: { NODE_ENV: 'production' } };</script>
-
-    <!-- Widget CSS & JS built by `npm run build:widget` -->
     <link rel="stylesheet" href="/widget/lead-acquisition-forms.css" />
+    <script>window.process = { env: { NODE_ENV: 'production' } };</script>
     <script src="/widget/lead-form-widget.js"></script>
-    <script>
-      // Mount the widget into a DOM selector
-      window.LeadFormWidget.mount('#lead-form-root');
-    </script>
-  </body>
-  </html>
-```
+    <script>window.LeadFormWidget.mount('#lead-form-root');</script>
+    ```
+  - Iframe
+    ```html
+    <iframe
+      src="/iframe/index.html"
+      title="Lead Form"
+      style="width: 420px; height: 660px; border: 0;"
+      loading="lazy"
+    ></iframe>
+    ```
 
-## Iframe Demo (local development)
-We provide an iframe page to demo/embed the UMD bundle locally.
+## Backend (Firebase Functions)
+- Features
+  - Runtime: Node 20; HTTPS onRequest with CORS `*` (region: `australia-southeast1`)
+  - Endpoint: `POST /submitLead`
+  - Validation & processing: validates with shared Zod schema; normalizes phone (strip non-digits and drop `+61/61/0`) and amount (digits-only)
+  - Persistence: writes to Firestore collection `leads` with `createdAt`
+  - Integrations: forwards valid leads to Salesforce CRM when configured
+  - Response contract:
+    - 200: `{ id, message: 'Write successful' }` – returns an id for subsequent operations and querying the corresponding data
+    - 400: `{ error: 'data_validation_failed', details: { field: message } }`
+    - 405: `{ error: 'Method Not Allowed' }`
+    - 500: `{ error: 'firestore_write_failed', details }` or `{ error: 'Internal server error' }`
 
-Dev:
-```bash
-npm run dev:iframe
-```
-- Serves `src/iframe/index.html` with `publicDir` mapped to the project `public/`
-- Ensure you have built the widget first:
-  ```bash
-  npm run build:widget
-  ```
+- Prerequisites
+  - Install Firebase CLI: `npm i -g firebase-tools`
+  - Login: `firebase login`
+  - Select project: `firebase projects:list` then `firebase use <projectId>` (or update `backend/.firebaserc`)
+  - Configure environment (recommended via Firebase/Secret Manager):
+    - `SALESFORCE_ENDPOINT`
+    - `SALESFORCE_TOKEN`
 
-Build (optional):
-```bash
-npm run build:iframe
-```
-By default, the iframe build writes to `public/iframe/`. You can disable copying `public/` into that folder by setting `copyPublicDir: false` if desired.
+- Local
+  - `npm run dev:backend` (emulator)
+- Deploy
+  - `npm run deploy:backend`
+- Env (set via .env or Firebase config)
+  - `SALESFORCE_ENDPOINT`, `SALESFORCE_TOKEN`
 
-Global API exposed by the bundle:
-```ts
-// window.LeadFormWidget (see src/main-widget.tsx)
-interface LeadFormWidget {
-  mount: (selector: string) => void;
-}
-```
-
-## Backend Endpoint Configuration
-The form posts leads as JSON to `VITE_FUNCTIONS_BASE_URL` if set, otherwise to `/submitLead`.
-- Configure the base URL via Vite env (at build time):
-  ```bash
-  # .env or environment
-  VITE_FUNCTIONS_BASE_URL=https://your-cloud-function.example.com/submitLead
-  ```
-- See `src/services/api.ts` for request details.
-
-Payload shape (`SubmitLeadPayload`):
-```ts
-{
-  fullName: string;
-  email: string;
-  phoneNumber: string; // includes "+61" prefix when sent
-  loanType: string;
-  loanAmount: string;
-}
-```
-
-## Cloud Functions (Backend)
-
-Overview:
-- Runtime: Node 20, Firebase Functions v2 (HTTPS onRequest)
-- Single HTTP endpoint: `submitLead` (region: `australia-southeast1`), CORS `*`
-- Basic checks: method must be POST; required fields presence validation
-- Persists to Firestore collection `leads` with `createdAt` server timestamp
-
-Key files:
-- `functions/src/index.ts`: exports the HTTPS function with CORS enabled
-- `functions/src/handlers/leadHandler.ts`: method/field validation, error handling, calls Firestore
-- `functions/src/services/firestoreService.ts`: initializes Admin SDK and writes lead document
-
-Local development (Functions):
-```bash
-cd functions
-npm install
-npm run serve     # builds then starts the Functions emulator (functions only)
-# Copy the printed local URL of submitLead and set it for the widget build/run
-# Example: VITE_FUNCTIONS_BASE_URL=http://127.0.0.1:5001/<project-id>/australia-southeast1/submitLead
-```
-
-Deploy (requires Firebase project configured):
-```bash
-cd functions
-npm run deploy
-```
-
-Logs:
-```bash
-cd functions
-npm run logs
-```
-
-Request/Response contract (server):
-- Request: `POST` JSON body `{ fullName, email, phoneNumber, loanType, loanAmount }`
-- Responses:
-  - 200 `{ message: 'Lead submitted successfully' }`
-  - 400 `{ error: 'Missing required fields', received: { ...booleans } }`
-  - 405 `{ error: 'Method Not Allowed' }`
-  - 500 `{ error: 'firestore_write_failed', details }` or `{ error: 'Internal server error', details? }`
-
-Notes:
-- Frontend timeout is 15s (`src/services/api.ts`). Surface server error messages if needed.
-- Consider enhancing server-side validation (email/phone format), rate limiting, and spam protection as follow-ups.
-
-## Validation Rules (Zod)
-Defined in `src/types/loanForm.ts`:
-- `loanAmount`: string of digits, > 0
-- `loanType`: one of `loanTypeEnum` (empty string treated as unselected)
-- `fullName`: min length 2
-- `email`: must be a valid email
-- `phoneNumber`: exactly 9 digits (UI displays "+61" prefix, only digits stored)
+## Shared Types (Zod)
+- Source: `shared/types/loanForm.ts`
+- Frontend imports: `@lead/shared/types/loanForm`
+- Backend runtime imports: compiled JS at `backend/types/loanForm.js`
+- Build shared first: `npm run build:shared`
 
 ## Accessibility
-- Labels are associated via `htmlFor`
-- Error messages are rendered near fields and set `aria-invalid` appropriately
-- Purely decorative elements are marked `aria-hidden`
+- Live region announces step changes
+- Inputs wired with `aria-invalid` and `aria-describedby` for inline error messaging
+- First invalid field is focused on invalid submit
 
-## Notes on Styling
-- The form uses Tailwind utility classes embedded in the components
-- Base styles are encapsulated in small UI components (`Button`, `Input`, `Select`, `Label`)
-
-## Troubleshooting
-- Blank screen or console error about `React`/`ReactDOM` not found:
-  - Ensure the host page provides global `React` and `ReactDOM` before loading `lead-form-widget.js`
-- Network errors on submit:
-  - Verify `VITE_FUNCTIONS_BASE_URL`
-- Validation blocking step transitions:
-  - Check field values against the rules in `src/types/loanForm.ts`
-
-## Scripts
-- `npm run dev`: Start dev server
-- `npm run build`: Type-check and build the widget bundle
-- `npm run preview`: Preview the production build
-- `npm run lint`: Run ESLint
+## To Do (Due to limited time)
+- Add Firestore security rules and CI validation
+- Expand unit test coverage across all frontend and backend components/modules
+- Add E2E tests (Playwright or Cypress) to validate the full flow
+- Provide production-grade Docker workflows to serve both frontend and backend services
 
 ## License
 MIT
