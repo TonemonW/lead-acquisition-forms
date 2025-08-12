@@ -35,6 +35,13 @@ lead-acquisition-forms/
         ContactInformationStep.tsx
         ui/ (button, input, select, label, icon)
         ui/button.test        # Button unit test (Vitest)
+      hooks/                  # Custom React hooks for form logic
+        useContactForm.ts     # Contact form submission and validation
+        useLoanDetailsForm.ts # Loan details form handling
+        useLoanFormSteps.ts   # Multi-step form navigation
+        useFocusFirstInvalid.ts # Accessibility focus management
+      lib/                    # Utility functions and helpers
+        cn.ts                 # Class name utility (clsx + tailwind-merge)
       services/api.ts         # submitLead(payload)
       iframe/index.html       # Iframe page
     public/
@@ -133,10 +140,25 @@ lead-acquisition-forms/
 - First invalid field is focused on invalid submit
 
 ## To Do (Due to limited time)
+
+### Security & Infrastructure
 - Add Firestore security rules and CI validation
+- Provide production-grade Docker workflows to serve both frontend and backend services
+
+### Testing & Quality Assurance
 - Expand unit test coverage across all frontend and backend components/modules
 - Add E2E tests (Playwright or Cypress) to validate the full flow
-- Provide production-grade Docker workflows to serve both frontend and backend services
+- Use Docker containers to ensure consistent testing environments across different development machines and CI/CD pipelines
+
+### State Management & Architecture
+- Consider migrating from React Hook Form to Zustand or Redux for more complex state management scenarios, especially if the application grows to include user sessions, persistent form drafts, or real-time collaboration features
+
+### Anti-Abuse & Security Measures
+- Implement CAPTCHA or reCAPTCHA integration to prevent form spam, bot submissions, and automated abuse, ensuring legitimate lead generation while maintaining user experience
+- Implement rate limiting, IP-based blocking, email verification, and request throttling to further protect against spam, DDoS attacks, and malicious submissions
+
+### Internationalization & Localization
+- Add multi-language support for form labels, error messages, and UI text to serve global markets, including RTL language support and locale-specific formatting for phone numbers, currency, and dates
 
 ## License
 MIT
